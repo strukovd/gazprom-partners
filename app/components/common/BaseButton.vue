@@ -9,7 +9,7 @@
 		}"
 	>
 		<BaseIcon v-if="prependIcon" fill="currentColor" size="1.2em" :name="prependIcon"/>
-		<span class="button-text"><slot name="default"></slot></span>
+		<div class="button-text"><slot name="default"></slot></div>
 		<BaseIcon v-if="appendIcon" fill="currentColor" size="1.2em" :name="appendIcon"/>
 	</button>
 </template>
@@ -96,6 +96,8 @@ export default defineComponent({
 
 	.button-text {
 		font-weight: 300;
+		text-align: center;
+    	flex: auto 1 1;
 	}
 }
 </style>
