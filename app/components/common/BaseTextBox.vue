@@ -1,22 +1,21 @@
 <template>
-	<div class="text-box" :class="{ 'invalid': error }" @keydown.enter="button?.onClick" >
+	<div class="base-text-box" :class="{ 'invalid': error }" @keydown.enter="onSubmit" >
 		<label>
 			<div class="text-box-wrapper">
 				<header class="header" style="display:flex; align-items:center; padding-right:1em;">
 					<div v-if="label" class="caption-container" style="flex:auto 1 1;">
 						<span class="caption">{{ label }}</span>
 					</div>
-					<div v-if="error" class="error-container"
-						style="display:flex; gap:.2em; justify-content:flex-end; font-size:14px; color:red; opacity:.6; line-height:1.4em;">
-						<!--						<v-icon icon="mdi-alert-decagram" size="1.2em"></v-icon>-->
+					<div v-if="error" class="error-container" style="display:flex; gap:.2em; justify-content:flex-end; font-size:14px; color:red; opacity:.6; line-height:1.4em;">
+						<!-- <BaseIcon name="mdi-alert-decagram" size="1.2em"/> -->
 						<span class="error-message">{{ error }}</span>
 					</div>
 				</header>
-				<div class="c-text-box">
-					<!--					<v-icon v-if="appendIcon" class="append-icon" :icon="appendIcon" color="rgba(23, 43, 77, 0.7)" size="1.4em"></v-icon>-->
-					<input :type="type" :placeholder="placeholder" :value="modelValue" @input="onInput">
-					<!--					<v-icon v-if="type === 'password'" :icon="hideValue ? 'mdi-eye-outline' : 'mdi-eye-off-outline'" size="1.4em" @click="hideValue = !hideValue"></v-icon>-->
-					<BaseButton v-if="button && button.onClick" @click="button.onClick" secondary>{{ button.text }}</BaseButton>
+				<div class="text-box-area">
+					<BaseIcon v-if="prependIcon" class="prepend-icon" size="1.4em" :name="prependIcon"/>
+					<input :type="type" :placeholder="placeholder" :value="modelValue" @input="onInput"/>
+					<BaseIcon v-if="appendIcon" class="append-icon" size="1.4em" :name="appendIcon"/>
+					<BaseButton v-if="button" @click="onSubmit" variant="secondary">{{ button }}</BaseButton>
 				</div>
 			</div>
 		</label>
@@ -24,37 +23,22 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, type PropType } from 'vue';
 import BaseButton from '~/components/common/BaseButton.vue';
-
-type InnerButton = {
-	text: string,
-	onClick: () => void
-};
+import BaseIcon from '~/components/common/BaseIcon.vue';
 
 export default defineComponent({
 	// TODO: добавить .lazy директиву
-	// directives: {
-	// 	lazy: {
-	// 		bind(el: any, binding: any) {
-	// 			const onInput = () => {
-	// 				const { lazy, value, arg } = binding;
-	// 				el.dispatchEvent(new CustomEvent('input-lazy', {
-	// 					detail: { value: el.value, arg }
-	// 				}));
-	// 				if (!lazy) {
-	// 					el.removeEventListener('input', onInput);
-	// 				}
-	// 			};
-	// 			el.addEventListener('input', onInput);
-	// 		}
-	// 	}
-	// },
 	name: 'BaseTextBox',
-	components: { BaseButton },
+	components: { BaseButton, BaseIcon },
+	emits: ['update:modelValue', 'submit'],
 	props: {
-		modelValue: [String, Number],
+		modelValue: {
+			type: [String, Number, null] as PropType<string | number | null>,
+			default: null
+		},
 		label: String,
+		prependIcon: String,
 		appendIcon: String,
 		placeholder: String,
 		type: {
@@ -64,30 +48,32 @@ export default defineComponent({
 				| 'time' | 'url' | 'week' | 'email' | 'number',
 			default: 'text'
 		},
-		button: { type: Object as () => InnerButton },
-		error: String
+		button: String,
+		error: String as () => string | null | undefined
 	},
-	emits: ['update:modelValue'],
 	data() {
 		return {
 			hideValue: false
 		};
 	},
-	created() {
-		this.hideValue = this.type === 'password';
-	},
 	methods: {
+		onSubmit(event: KeyboardEvent) {
+			this.$emit('submit', event);
+		},
 		onInput(event: Event) {
 			this.$emit('update:modelValue', (event.target as any)?.value ?? '');
 		}
+	},
+	created() {
+		this.hideValue = this.type === 'password';
 	},
 });
 </script>
 
 <style lang="scss">
-.text-box {
+.base-text-box {
   .text-box-wrapper {
-    margin: 0 0 .6em 0;
+    // margin: 0 0 .6em 0;
 
     .caption {
       font-size: 14px;
@@ -96,7 +82,7 @@ export default defineComponent({
       margin-bottom: .4em;
     }
 
-    .c-text-box {
+    .text-box-area {
       display: flex;
       align-items: center;
       white-space: nowrap;
@@ -113,23 +99,6 @@ export default defineComponent({
 
       &:focus-within {
         box-shadow: 0 0 0 2px #0079C1aa;
-      }
-
-      .v-icon {
-        padding-top: .1em;
-        margin-right: .3em;
-        opacity: .8;
-
-        // font-size: 1.4em;
-        // display: flex;
-        // align-items: center;
-        // padding: 1em 2em 1em 2em;
-        // margin-bottom: 0;
-        // font-weight: 400;
-        // color: #5c6873;
-        // background-color: #f0f3f5;
-        // border: 1px solid #e4e7ea;
-        // border-radius: 0 5px 5px 0;
       }
 
       & > input {
@@ -153,7 +122,7 @@ export default defineComponent({
   }
 
   &.invalid {
-    .c-text-box {
+    .text-box-area {
       border-color: red;
       border-style: dashed;
       color: red;
