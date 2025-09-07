@@ -9,7 +9,7 @@
 					<div class="issue-date"><span>Дата подачи: </span><span class="date">12.12.2022</span></div>
 					<div class="status" :style="{ background: randColor() }">Согласование ЭЧ</div>
 				</div>
-				<BaseButton prependIcon="mdi-plus">Добавить строй паспорт</BaseButton>
+				<BaseButton @click="navigateTo('/construct-pass')" prependIcon="mdi-plus">Добавить строй паспорт</BaseButton>
 			</div>
 		</div>
 	</section>

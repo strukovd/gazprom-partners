@@ -23,7 +23,7 @@
 				</div>
 				<BaseTextBox appendIcon="mdi-account" placeholder="Логин"/>
 				<BaseTextBox appendIcon="mdi-lock" placeholder="Пароль"/>
-				<BaseButton>Войти</BaseButton>
+				<BaseButton @click="navigateTo('/issues')" style="line-height:2em; text-align:center;">Войти</BaseButton>
 			</div>
 		</div>
 	</section>
