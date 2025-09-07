@@ -1,33 +1,35 @@
 <template>
 	<button type="button"
 		class="base-button"
-		:class="[buttonColor, { 'disabled': disabled }]"
+		:class="[variant, { 'disabled': disabled }]"
 		:style="{
-			color: !disabled && secondary && color ? color : '',
-			borderColor: !disabled && secondary && color ? color : '',
-			background: !disabled && !secondary && color ? color : ''
+			color: !disabled && variant === 'secondary' && color ? color : '',
+			borderColor: !disabled && variant === 'secondary' && color ? color : '',
+			background: !disabled && variant !== 'secondary' && color ? color : ''
 		}"
 	>
-		<!-- <v-icon v-if="prependIcon" :icon="prependIcon" size="1.2em" style="margin-right:.3em; opacity:.8;"></v-icon> -->
-		<span style="font-weight:300;"><slot name="default"></slot></span>
+		<BaseIcon v-if="prependIcon" fill="currentColor" size="1.2em" :name="prependIcon"/>
+		<span class="button-text"><slot name="default"></slot></span>
+		<BaseIcon v-if="appendIcon" fill="currentColor" size="1.2em" :name="appendIcon"/>
 	</button>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import BaseIcon from '~/components/common/BaseIcon.vue';
 
 export default defineComponent({
 	name: 'BaseButton',
+	components: { BaseIcon },
 	props: {
 		prependIcon: String,
+		appendIcon: String,
 		disabled: { type: Boolean, default: false },
-		secondary: { type: Boolean, default: false },
-		color: String
-	},
-	computed: {
-		buttonColor() {
-			return this.secondary ? 'secondary' : 'primary';
-		}
+		color: String,
+		variant: {
+			type: String as () => 'primary' | 'secondary',
+			default: 'primary'
+		},
 	},
 	data() {
 		return {};
@@ -38,14 +40,22 @@ export default defineComponent({
 
 <style lang="scss">
 .base-button {
-	line-height:1.4em;
+	// background: #0079C1;
+	// color: #fff;
+
+	// line-height:1.4em;
+	// background: #EBF1FF;
+	// color: #0079C1;
 	font-weight: 500;
 	border-radius: 4px;
 	box-shadow: none;
-	padding:.4em 1.1em;
+	padding:.6em 1em .6em .8em;
 	user-select: none;
 	transition:all 300ms ease 0s;
 	border-style: none;
+	display: flex;
+	align-items: center;
+	gap: .3em;
 
 	&.disabled {
 		background: #ffffff55;
@@ -59,19 +69,20 @@ export default defineComponent({
 		cursor: pointer;
 
 		&.primary {
-			background: #0079C1;
-			color: #fff;
+			// background: #0079C1;
+			// color: #fff;
 
-			// background: #FFFFFF;
-			// border-radius: 6px;
+			background: #0052cc;
+			color: #fff;
+			font-weight: 700;
 			// border: 1px solid rgba(224, 226, 231, 0.56);
 		}
 
 		&.secondary {
-			background: #ffffff55;
-			color: #0079C1dd;
-			outline:1px solid #0079C1;
-			outline-offset:-1px;
+			background: rgba(9,30,66,.08);
+			// background: color-mix(in srgb, currentcolor 3%, transparent 97%);
+			color: #344563;
+			border: 1px solid transparent;
 
 			// background: #EBF1FF;
 			// color: #0079C1;
@@ -80,6 +91,11 @@ export default defineComponent({
 		&:hover {
 			opacity:.8;
 		}
+	}
+
+
+	.button-text {
+		font-weight: 300;
 	}
 }
 </style>
