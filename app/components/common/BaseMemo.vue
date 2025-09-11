@@ -29,6 +29,7 @@ export default defineComponent({
 	// TODO: добавить .lazy директиву
 	name: 'BaseTextBox',
 	emits: [ 'update:modelValue' ],
+	components: { BaseIcon },
 	props: {
 		modelValue: [ String, Number ],
 		label: String,
@@ -78,7 +79,7 @@ export default defineComponent({
 			align-items: center;
 			white-space: nowrap;
 			text-wrap: nowrap;
-			font-size: 16px;
+			// font-size: 16px;
 			background: #FFFFFF;
 			border-radius: 6px;
 			border: 1px solid #E0E2E791;
@@ -110,10 +111,11 @@ export default defineComponent({
 			}
 
 			&>textarea {
+				font-family: inherit;
 				flex: auto 1 0;
 				color: inherit;
 				outline: none;
-				font-size: 16px;
+				font-size: 1em;
 				box-sizing: border-box;
 				background: transparent;
 				// padding:.5em .7em;
