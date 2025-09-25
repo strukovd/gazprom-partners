@@ -2,7 +2,7 @@
 	<section class="login-page">
 		<div class="auth">
 			<h2 class="title">Авторизация</h2>
-			<div class="form">
+			<form class="form" @keyup.enter="logIn" @submit.prevent="logIn">
 				<div class="logo">
 					<svg height="70" viewBox="0 0 251 124" style="padding: 10px;" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path d="M68.6999 22.3C66.0999 10.9 59.6 1.59998 58.7 0.0999756C57.2999 2.19998 52.1 10.4 49.4 19.5C46.5 29.6 46.0999 38.6 47.0999 47.5C48.0999 56.4 51.7999 65.5 51.7999 65.5C53.7999 70.3 56.7999 75.4 58.7 77.9C61.5 74.2 68.0999 63.2 70.0999 48.8C71.2999 40.7 71.2999 33.7 68.6999 22.3ZM58.5999 75C57.2999 72.6 55.2999 68 55.0999 60.9C55.0999 54 57.7999 48.2 58.5999 46.9C59.2999 48.1 61.6999 53.2 61.9999 60.3C62.2999 67.2 59.9999 72.6 58.5999 75ZM67.8999 41.7C67.7999 46.1 67.2999 50.7 66.5999 53.4C66.7999 48.7 66.2999 42 65.1999 36.8C64.0999 31.6 60.9999 22.9 58.5999 18.8C56.2999 22.6 53.5 30.2 52.0999 36.7C50.5999 43.2 50.5999 51.2 50.5999 53.5C50.1999 51.5 49.2 44.4 49.5 37.2C49.7 31.3 51.1 25.2 51.9 22.4C54.8 13.1 58.1 7.09998 58.7 6.09998C59.2999 6.99998 63.3999 14.4 65.5999 22.1C67.5999 29.9 67.9999 37.3 67.8999 41.7Z" fill="#0079C1"></path>
@@ -21,17 +21,44 @@
 						<path fill-rule="evenodd" clip-rule="evenodd" d="M79.3 93.7H250.1V123H79.3V93.7ZM194.9 117.5C198.8 117.5 200.6 115.8 200.6 111.8V110.1H196.4V112.4C196.4 113.7 195.8 114.2 194.9 114.2C194.1 114.2 193.5 113.6 193.5 112.3V103.5C193.5 102.6 194.2 102.2 194.9 102.2C195.5 102.2 196.4 102.7 196.4 103.6V105.2H200.6V104C200.6 101.3 198.9 99 194.9 99C190.9 99 189.2 101.2 189.2 104V111.7C189.2 115.8 191 117.5 194.9 117.5ZM173.7 105C173.7 101.3 176 99.2 179 99.2C182.4 99.2 184.2 101.4 184.2 103.9C184.2 106.1 183.5 107.2 181.7 108C183.5 108.7 184.8 109.4 184.8 112.6C184.8 116.1 182.5 117.7 179.2 117.7C176.6 117.7 173.6 116.5 173.6 112H177.5C177.5 114 178.1 114.5 179 114.5C180.1 114.5 180.5 113.9 180.5 112C180.5 110.4 180 109.7 178.6 109.7H178V106.5H179C179.6 106.5 180.3 105.8 180.3 104.6C180.3 103.3 179.9 102.4 178.9 102.4C177.8 102.4 177.5 103.2 177.5 105H173.7ZM92.2 99.6L89.3 106.6V99.6H85.2V117.2H89.3V113.1L90.4 111.1L92.4 117.2H96.8L92.9 107.4L96.8 99.6H92.2ZM105.2 106.4H107.2C109.7 106.4 112.3 107.5 112.3 111.8C112.3 116.3 109.6 117.2 107.2 117.2H101V99.6H105.2V106.4ZM114.1 117.2H118.3V99.6H114.1V117.2ZM123.5 99.6V117.2H127.8V110.4H129.7C132.2 110.4 134.8 109.3 134.8 105C134.8 100.5 132.2 99.6 129.7 99.6H123.5ZM148.3 102.9V99.6H138.4V117.2H142.6V102.9H148.3ZM158.1 106.4H156.2V99.6H152V117.2H158.1C160.5 117.2 163.2 116.3 163.2 111.8C163.2 107.5 160.6 106.4 158.1 106.4ZM169.2 117.2H165V99.6H169.2V117.2ZM211.1 117.2H207.2V102.9H203.9V99.6H214.2V102.9H211.1V117.2ZM225.4 99.6L229.3 117.2H225.1L224.5 113.7H221.3L220.8 117.2H216.6L220.4 99.6H225.4ZM237.3 106.4H240V99.6H244.3V117.2H240V109.7H237.3V117.2H233V99.6H237.3V106.4Z" fill="#0079C1"></path>
 					</svg>
 				</div>
-				<BaseTextBox appendIcon="mdi-account" placeholder="Логин"/>
-				<BaseTextBox appendIcon="mdi-lock" placeholder="Пароль"/>
-				<BaseButton @click="navigateTo('/issues')" style="line-height:2em; text-align:center;">Войти</BaseButton>
-			</div>
+				<BaseTextBox v-model="login" appendIcon="mdi-account" placeholder="Логин" autofocus/>
+				<BaseTextBox v-model="password" type="password" appendIcon="mdi-lock" placeholder="Пароль"/>
+				<BaseButton @click="logIn" style="line-height:2em; text-align:center;">Войти</BaseButton>
+			</form>
 		</div>
 	</section>
 </template>
 
 <script lang="ts" setup>
+const { $api } = useNuxtApp();
 import BaseButton from '~/components/common/BaseButton.vue';
 import BaseTextBox from '~/components/common/BaseTextBox.vue';
+import { useUserStore } from '~/stores/UserStore';
+import { type UserData } from '~/types/UserData';
+
+const login = ref('');
+const password = ref('');
+
+
+async function logIn() {
+	const data: UserData = await $api('contractors/auth', {
+		method: 'POST',
+		body: { login: login.value, password: password.value },
+	});
+
+	if(data.success) {
+		useUserStore().setData(data.userData);
+
+		switch( String(data.userData.role).toUpperCase() ) {
+			case 'CONTRACTOR':
+				navigateTo('/issues');
+				break;
+			case 'ADMIN':
+				navigateTo('/issues');
+				break;
+		}
+	}
+}
 
 
 </script>
