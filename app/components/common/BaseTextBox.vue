@@ -13,7 +13,7 @@
 				</header>
 				<div class="text-box-area">
 					<BaseIcon v-if="prependIcon" class="prepend-icon" size="1.4em" :name="prependIcon"/>
-					<input :type="type" :placeholder="placeholder" :value="modelValue" @input="onInput"/>
+					<input :type="type" :placeholder="placeholder" :autofocus="autofocus" :value="modelValue" @input="onInput"/>
 					<BaseIcon v-if="appendIcon" class="append-icon" size="1.4em" :name="appendIcon"/>
 					<BaseButton v-if="button" @click="onSubmit" variant="secondary">{{ button }}</BaseButton>
 				</div>
@@ -40,6 +40,7 @@ export default defineComponent({
 		label: String,
 		prependIcon: String,
 		appendIcon: String,
+		autofocus: Boolean,
 		placeholder: String,
 		type: {
 			type: String as () => 'text' | 'password' | 'color'
