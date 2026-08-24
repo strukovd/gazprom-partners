@@ -101,7 +101,7 @@ function close() {
 
 <style lang="scss">
 .complaints-list-modal {
-	width: min(720px, 82vw);
+	// width: min(720px, 82vw);
 
 	.cl-content {
 		padding-bottom: 1em;

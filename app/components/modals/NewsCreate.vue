@@ -174,7 +174,7 @@ function close(result: boolean | 'created' | 'updated') {
 
 <style lang="scss">
 .news-modal {
-	width: min(720px, 82vw);
+	// width: min(720px, 82vw);
 	max-height: calc(90vh - 5em);
 	overflow-y: auto;
 	padding:0 .3em;

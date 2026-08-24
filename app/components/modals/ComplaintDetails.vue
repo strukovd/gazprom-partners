@@ -324,7 +324,7 @@ function close(result: boolean | 'updated' | 'deleted' | 'closed') {
 
 <style lang="scss">
 .complaint-details {
-	width: min(720px, 82vw);
+	// width: min(720px, 82vw);
 
 	.cd-state {
 		display: grid;

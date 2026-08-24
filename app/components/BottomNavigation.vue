@@ -123,6 +123,7 @@ function openMore() {
 				font-size: .68rem;
 				font-weight: 600;
 				line-height: 1.1;
+				overflow: visible;
 			}
 		}
 	}

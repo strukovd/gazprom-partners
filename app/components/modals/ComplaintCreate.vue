@@ -166,7 +166,7 @@ function close(result: boolean) {
 
 <style lang="scss">
 .complaint-modal {
-	width: min(720px, 82vw);
+	// width: min(720px, 82vw);
 	max-height: calc(90vh - 5em);
 	overflow-y: auto;
 	padding: 0 .3em;

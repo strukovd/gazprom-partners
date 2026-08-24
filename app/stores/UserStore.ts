@@ -59,8 +59,9 @@ export const useUserStore = defineStore('user', {
 		prettyRole: (state) => {
 			switch( state.userData?.role ) {
 				case 'CALLCENTER':
-				case 'CALLCENTER_MANAGER':
 					return 'Оператор колл-центра';
+				case 'CALLCENTER_MANAGER':
+					return 'Менеджер колл-центра';
 				case 'CALLCENTER_COMPLAINT_ASSIGNEE':
 					return 'Исполнитель жалоб';
 				case 'CONTROLLER':

@@ -53,7 +53,7 @@ function close() {
 
 <style lang="scss">
 .applications-modal {
-	width: min(720px, 82vw);
+	// width: min(720px, 82vw);
 
 	.am-content {
 		padding-bottom: 1em;
