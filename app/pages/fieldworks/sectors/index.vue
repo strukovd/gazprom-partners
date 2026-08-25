@@ -1,77 +1,106 @@
 <template>
 	<section id="sectors-page">
 		<main class="page-blocks">
-			<section class="sp-stats">
-				<BaseIsland v-for="item of statsData" :key="item.id" class="sp-stat">
-					<div :class="['sp-stat-icon', item.color]">
-						<BaseIcon :name="item.icon" size="1.35em"/>
-					</div>
-					<div class="sp-stat-info">
-						<div class="sp-stat-value"><Incrementator :value="item.value"/></div>
-						<div class="sp-stat-title">{{ item.title }}</div>
-					</div>
-				</BaseIsland>
-			</section>
+			<template v-if="loading">
+				<section class="sp-stats">
+					<BaseIsland v-for="item of 4" :key="item" class="sp-stat sp-stat-skeleton">
+						<BaseSkeleton width="3em" height="3em" borderRadius="50%"/>
+						<div class="sp-stat-info">
+							<BaseSkeleton width="2.2em" height="1.5em"/>
+							<BaseSkeleton width="5em" height=".8em"/>
+						</div>
+					</BaseIsland>
+				</section>
 
-			<section class="sp-caption">
-				<span class="sp-caption-text">Участки</span>
-				<span class="sp-caption-date">25.05.2026</span>
-			</section>
+				<section class="sp-caption">
+					<BaseSkeleton width="11em" height="1em"/>
+				</section>
 
-			<section class="sp-sectors">
-				<BaseIsland class="sp-sector" v-for="item of sectors" :key="item.id">
-					<header class="sp-sector-header">
-						<div class="sp-sector-title">
-							<div class="sp-title-line">
-								<BaseIcon name="mdi-layers-outline" size="1.1em"/>
-								<span class="sp-title-text">Участок №{{ item.id }}</span>
+				<section class="sp-sectors">
+					<BaseIsland v-for="item of 3" :key="item" class="sp-sector sp-sector-skeleton">
+						<BaseSkeleton width="55%" height="1.4em"/>
+						<BaseSkeleton width="35%" height=".8em"/>
+						<BaseSkeleton height="5.4em"/>
+						<BaseSkeleton height=".8em"/>
+						<BaseSkeleton height="4.4em"/>
+						<BaseSkeleton height="3.1em"/>
+					</BaseIsland>
+				</section>
+			</template>
+
+			<template v-else>
+				<section class="sp-stats">
+					<BaseIsland v-for="item of statsData" :key="item.id" class="sp-stat">
+						<div :class="['sp-stat-icon', item.color]">
+							<BaseIcon :name="item.icon" size="1.35em"/>
+						</div>
+						<div class="sp-stat-info">
+							<div class="sp-stat-value"><Incrementator :value="item.value"/></div>
+							<div class="sp-stat-title">{{ item.title }}</div>
+						</div>
+					</BaseIsland>
+				</section>
+
+				<section class="sp-caption">
+					<span class="sp-caption-text">Участки</span>
+					<span class="sp-caption-date">25.05.2026</span>
+				</section>
+
+				<section class="sp-sectors">
+					<BaseIsland class="sp-sector" v-for="item of sectors" :key="item.id">
+						<header class="sp-sector-header">
+							<div class="sp-sector-title">
+								<div class="sp-title-line">
+									<BaseIcon name="mdi-layers-outline" size="1.1em"/>
+									<span class="sp-title-text">Участок №{{ item.id }}</span>
+								</div>
+								<div class="sp-area-line">
+									<BaseIcon name="mdi-city-variant-outline" size="1em"/>
+									<span class="sp-area-text">{{ item.district }}</span>
+								</div>
 							</div>
-							<div class="sp-area-line">
-								<BaseIcon name="mdi-city-variant-outline" size="1em"/>
-								<span class="sp-area-text">{{ item.district }}</span>
+							<div class="sp-badge">{{ item.status }}</div>
+						</header>
+
+						<div class="sp-assignees">
+							<div v-for="assignee of item.assignees" :key="assignee.id" class="sp-assignee">
+								<Avatar :name="assignee.name" size="2em"/>
+								<span class="sp-assignee-name">{{ assignee.name }}</span>
 							</div>
 						</div>
-						<div class="sp-badge">{{ item.status }}</div>
-					</header>
 
-					<div class="sp-assignees">
-						<div v-for="assignee of item.assignees" :key="assignee.id" class="sp-assignee">
-							<Avatar :name="assignee.name" size="2em"/>
-							<span class="sp-assignee-name">{{ assignee.name }}</span>
+						<div class="sp-progress">
+							<div class="sp-progress-header">
+								<span class="sp-progress-title">Общий прогресс</span>
+								<span class="sp-progress-count">{{ item.progress.collected }}/{{ item.progress.total }}</span>
+							</div>
+							<BaseProgressBar :percent="toPercent(item.progress.collected, item.progress.total)" height=".5em" color="#2563eb"/>
+							<div class="sp-progress-percent">{{ toPercent(item.progress.collected, item.progress.total) }}%</div>
 						</div>
-					</div>
 
-					<div class="sp-progress">
-						<div class="sp-progress-header">
-							<span class="sp-progress-title">Общий прогресс</span>
-							<span class="sp-progress-count">{{ item.progress.collected }}/{{ item.progress.total }}</span>
+						<div class="sp-routes">
+							<span v-for="route of item.routes" :key="route.id" class="sp-route">{{ route.id }}</span>
 						</div>
-						<BaseProgressBar :percent="toPercent(item.progress.collected, item.progress.total)" height=".5em" color="#2563eb"/>
-						<div class="sp-progress-percent">{{ toPercent(item.progress.collected, item.progress.total) }}%</div>
-					</div>
 
-					<div class="sp-routes">
-						<span v-for="route of item.routes" :key="route.id" class="sp-route">{{ route.id }}</span>
-					</div>
+						<div class="sp-totals">
+							<div class="sp-total routes">
+								<div class="sp-total-value">{{ item.routes.length }}</div>
+								<div class="sp-total-title">Маршрутов</div>
+							</div>
+							<div class="sp-total collected">
+								<div class="sp-total-value">{{ item.progress.collected }}</div>
+								<div class="sp-total-title">Собрано</div>
+							</div>
+							<div class="sp-total missing">
+								<div class="sp-total-value">{{ item.progress.total - item.progress.collected }}</div>
+								<div class="sp-total-title">Не собрано</div>
+							</div>
+						</div>
 
-					<div class="sp-totals">
-						<div class="sp-total routes">
-							<div class="sp-total-value">{{ item.routes.length }}</div>
-							<div class="sp-total-title">Маршрутов</div>
-						</div>
-						<div class="sp-total collected">
-							<div class="sp-total-value">{{ item.progress.collected }}</div>
-							<div class="sp-total-title">Собрано</div>
-						</div>
-						<div class="sp-total missing">
-							<div class="sp-total-value">{{ item.progress.total - item.progress.collected }}</div>
-							<div class="sp-total-title">Не собрано</div>
-						</div>
-					</div>
-
-					<BaseButton class="sp-route-button" prependIcon="mdi-transit-connection-variant" @click="openSector(item.id)">Маршруты участка</BaseButton>
-				</BaseIsland>
-			</section>
+						<BaseButton class="sp-route-button" prependIcon="mdi-transit-connection-variant" @click="openSector(item.id)">Маршруты участка</BaseButton>
+					</BaseIsland>
+				</section>
+			</template>
 		</main>
 	</section>
 </template>
@@ -82,6 +111,7 @@ import BaseButton from '~/components/common/base/BaseButton.vue';
 import BaseIcon from '~/components/common/base/BaseIcon.vue';
 import BaseIsland from '~/components/common/base/BaseIsland.vue';
 import BaseProgressBar from '~/components/common/base/charts/BaseProgressBar.vue';
+import BaseSkeleton from '~/components/common/base/BaseSkeleton.vue';
 import Incrementator from '~/components/common/Incrementator.vue';
 
 type Sector = {
@@ -93,7 +123,7 @@ type Sector = {
 	progress: { collected: number; total: number };
 };
 
-const loading = ref(false);
+const loading = ref(true);
 const sectors = ref<Sector[]>([]);
 
 onMounted(async () => {
@@ -223,6 +253,13 @@ async function fetchSectors(): Promise<Sector[]> {
 					color: #475569;
 					font-size: .82rem;
 					font-weight: 600;
+				}
+			}
+
+			&.sp-stat-skeleton {
+				.sp-stat-info {
+					display: grid;
+					gap: .45em;
 				}
 			}
 		}
@@ -447,6 +484,10 @@ async function fetchSectors(): Promise<Sector[]> {
 				min-height: 3.1em;
 				font-size: 1rem;
 				border-radius: 12px;
+			}
+
+			&.sp-sector-skeleton {
+				grid-template-rows: auto auto 5.4em auto 4.4em 3.1em;
 			}
 		}
 	}
