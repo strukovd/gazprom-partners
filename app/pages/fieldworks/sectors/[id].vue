@@ -10,50 +10,71 @@
 			<BaseBreadcrumbs :breadcrumbs="[{ title: 'Участки', link: '/fieldworks/sectors' }, { title: 'Участок №' + sectorId, disabled: true }]" />
 
 			<BaseIsland class="sp-summary">
-				<div class="sp-summary-icon"><BaseIcon name="mdi-layers-triple-outline" size="1.7em"/></div>
-				<div class="sp-summary-item sp-summary-sector">
-					<div class="sp-summary-label">Участок</div>
-					<div class="sp-summary-title">Участок №{{ sectorId }}</div>
-				</div>
-				<div class="sp-summary-item">
-					<div class="sp-summary-label">Район</div>
-					<div class="sp-summary-value"><BaseIcon name="mdi-city-variant-outline" size="1em"/>Свердловский р-н</div>
-				</div>
-				<div class="sp-summary-item">
-					<div class="sp-summary-label">Маршрутов</div>
-					<div class="sp-summary-value">2</div>
-				</div>
-				<div class="sp-spacer"></div>
-				<div class="sp-summary-item">
-					<div class="sp-summary-label">Прогресс</div>
-					<div class="sp-summary-value">10/33 (30%)</div>
-					<BaseProgressBar class="sp-progress-line" :percent="30" height=".55em" color="#2563eb"/>
-				</div>
+				<template v-if="loading">
+					<BaseSkeleton width="2.6em" height="2.6em" borderRadius="50%"/>
+					<div class="sp-summary-item sp-summary-sector"><BaseSkeleton width="8em" height="2em"/></div>
+					<div class="sp-summary-item"><BaseSkeleton width="8em" height="2em"/></div>
+					<div class="sp-summary-item"><BaseSkeleton width="3em" height="2em"/></div>
+					<div class="sp-spacer"></div>
+					<div class="sp-summary-item"><BaseSkeleton width="6em" height="2em"/></div>
+				</template>
+				<template v-else>
+					<div class="sp-summary-icon"><BaseIcon name="mdi-layers-triple-outline" size="1.7em"/></div>
+					<div class="sp-summary-item sp-summary-sector">
+						<div class="sp-summary-label">Участок</div>
+						<div class="sp-summary-title">Участок №{{ sectorId }}</div>
+					</div>
+					<div class="sp-summary-item">
+						<div class="sp-summary-label">Район</div>
+						<div class="sp-summary-value"><BaseIcon name="mdi-city-variant-outline" size="1em"/>Свердловский р-н</div>
+					</div>
+					<div class="sp-summary-item">
+						<div class="sp-summary-label">Маршрутов</div>
+						<div class="sp-summary-value">2</div>
+					</div>
+					<div class="sp-spacer"></div>
+					<div class="sp-summary-item">
+						<div class="sp-summary-label">Прогресс</div>
+						<div class="sp-summary-value">10/33 (30%)</div>
+						<BaseProgressBar class="sp-progress-line" :percent="30" height=".55em" color="#2563eb"/>
+					</div>
+				</template>
 			</BaseIsland>
 
 			<section class="sp-content">
 				<div class="sp-caption">Маршруты участка</div>
 				<div class="sp-routes">
-					<BaseIsland v-for="(route, index) of sector?.routes" :key="index" class="sp-route" @click="openRoute(route.id)">
-						<div class="sp-route-header">
-							<div class="sp-route-number"><BaseIcon name="mdi-transit-connection-variant" size="1.2em"/><span class="sp-route-id">{{ route.id }}</span></div>
-							<div class="sp-route-date">{{ toLocaleDate(route.date) }}</div>
-						</div>
-						<section class="sp-assignees">
-							<div v-for="assignee of route.assignees" class="sp-assignee"><Avatar :name="assignee.name" size="2em"/><span class="sp-assignee-name">{{ assignee.name }}</span></div>
-						</section>
-						<div class="sp-route-meta">
-							<span class="sp-route-meta-item"><BaseIcon name="mdi-account-group-outline" size="1em"/>{{ route.subscribers }} абонентов</span>
-							<span class="sp-route-meta-item"><BaseIcon name="mdi-map-marker-outline" size="1em"/>4 улицы</span>
-						</div>
-						<div class="sp-streets">
-							<div v-for="street of route.streets" class="sp-street"><span>{{ street.street }}</span><span>{{ street.subscribers }} аб.</span></div>
-						</div>
-						<div class="sp-route-progress">
-							<div class="sp-route-progress-header"><span>Собрано: <span class="sp-route-progress-count">{{ route.progress.collected }} / {{ route.progress.total }}</span></span><span>{{ toPercent(route.progress.collected, route.progress.total) }}%</span></div>
-							<BaseProgressBar :percent="toPercent(route.progress.collected, route.progress.total)" height=".45em" color="#2563eb"/>
-						</div>
-					</BaseIsland>
+					<template v-if="loading">
+						<BaseIsland v-for="item of 2" :key="item" class="sp-route sp-route-skeleton">
+							<BaseSkeleton width="40%" height="1.2em"/>
+							<BaseSkeleton height="3.2em"/>
+							<BaseSkeleton width="55%" height=".9em"/>
+							<BaseSkeleton height="4em"/>
+							<BaseSkeleton height=".45em"/>
+						</BaseIsland>
+					</template>
+					<template v-else>
+						<BaseIsland v-for="(route, index) of sector?.routes" :key="index" class="sp-route" @click="openRoute(route.id)">
+							<div class="sp-route-header">
+								<div class="sp-route-number"><BaseIcon name="mdi-transit-connection-variant" size="1.2em"/><span class="sp-route-id">{{ route.id }}</span></div>
+								<div class="sp-route-date">{{ toLocaleDate(route.date) }}</div>
+							</div>
+							<section class="sp-assignees">
+								<div v-for="assignee of route.assignees" class="sp-assignee"><Avatar :name="assignee.name" size="2em"/><span class="sp-assignee-name">{{ assignee.name }}</span></div>
+							</section>
+							<div class="sp-route-meta">
+								<span class="sp-route-meta-item"><BaseIcon name="mdi-account-group-outline" size="1em"/>{{ route.subscribers }} абонентов</span>
+								<span class="sp-route-meta-item"><BaseIcon name="mdi-map-marker-outline" size="1em"/>4 улицы</span>
+							</div>
+							<div class="sp-streets">
+								<div v-for="street of route.streets" class="sp-street"><span>{{ street.street }}</span><span>{{ street.subscribers }} аб.</span></div>
+							</div>
+							<div class="sp-route-progress">
+								<div class="sp-route-progress-header"><span>Собрано: <span class="sp-route-progress-count">{{ route.progress.collected }} / {{ route.progress.total }}</span></span><span>{{ toPercent(route.progress.collected, route.progress.total) }}%</span></div>
+								<BaseProgressBar :percent="toPercent(route.progress.collected, route.progress.total)" height=".45em" color="#2563eb"/>
+							</div>
+						</BaseIsland>
+					</template>
 				</div>
 			</section>
 		</main>
@@ -67,6 +88,7 @@ import BaseIcon from '~/components/common/base/BaseIcon.vue';
 import BaseIsland from '~/components/common/base/BaseIsland.vue';
 import BaseTabs from '~/components/common/base/BaseTabs.vue';
 import BaseProgressBar from '~/components/common/base/charts/BaseProgressBar.vue';
+import BaseSkeleton from '~/components/common/base/BaseSkeleton.vue';
 import { toLocaleDate } from '~/utils/format';
 
 type Sector = {
@@ -339,7 +361,7 @@ async function fetchSector(): Promise<Sector> {
 						display: flex;
 						align-items: center;
 						gap: .55em;
-	
+
 						.sp-assignee-name {
 							min-width: 0;
 							overflow: hidden;
