@@ -26,17 +26,17 @@
 					</div>
 					<div class="sp-summary-item">
 						<div class="sp-summary-label">Район</div>
-						<div class="sp-summary-value"><BaseIcon name="mdi-city-variant-outline" size="1em"/>Свердловский р-н</div>
+						<div class="sp-summary-value"><BaseIcon name="mdi-city-variant-outline" size="1em"/>{{ sector.district }}</div>
 					</div>
 					<div class="sp-summary-item">
 						<div class="sp-summary-label">Маршрутов</div>
-						<div class="sp-summary-value">2</div>
+						<div class="sp-summary-value">{{ sector.routes?.length ?? 0 }}</div>
 					</div>
 					<div class="sp-spacer"></div>
-					<div class="sp-summary-item">
+					<div v-if="sector?.progress" class="sp-summary-item">
 						<div class="sp-summary-label">Прогресс</div>
-						<div class="sp-summary-value">10/33 (30%)</div>
-						<BaseProgressBar class="sp-progress-line" :percent="30" height=".55em" color="#2563eb"/>
+						<div class="sp-summary-value">{{ sector.progress.collected }} / {{ sector.progress.total }} ({{ toPercent(sector.progress.collected, sector.progress.total) }}%)</div>
+						<BaseProgressBar class="sp-progress-line" :percent="toPercent(sector.progress.collected, sector.progress.total)" height=".55em" color="#2563eb"/>
 					</div>
 				</template>
 			</BaseIsland>
@@ -64,7 +64,7 @@
 							</section>
 							<div class="sp-route-meta">
 								<span class="sp-route-meta-item"><BaseIcon name="mdi-account-group-outline" size="1em"/>{{ route.subscribers }} абонентов</span>
-								<span class="sp-route-meta-item"><BaseIcon name="mdi-map-marker-outline" size="1em"/>4 улицы</span>
+								<span class="sp-route-meta-item"><BaseIcon name="mdi-map-marker-outline" size="1em"/>{{ route.streets.length }} улицы</span>
 							</div>
 							<div class="sp-streets">
 								<div v-for="street of route.streets" class="sp-street"><span>{{ street.street }}</span><span>{{ street.subscribers }} аб.</span></div>
@@ -192,11 +192,11 @@ async function fetchSector(): Promise<Sector> {
 	}
 
 	// Вычисляем общий прогресс
-	// sectorsStub.progress = sectorsStub.routes.reduce((acc, route) => {
-	// 	acc.collected += route.progress.collected;
-	// 	acc.total += route.progress.total;
-	// 	return acc;
-	// }, { collected: 0, total: 0 });
+	sectorsStub.progress = sectorsStub.routes.reduce((acc, route) => {
+		acc.collected += route.progress.collected;
+		acc.total += route.progress.total;
+		return acc;
+	}, { collected: 0, total: 0 });
 
 	return new Promise(resolve => setTimeout(() => resolve(sectorsStub), 1000));
 }
