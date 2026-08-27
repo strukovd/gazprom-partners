@@ -374,6 +374,7 @@ export default defineComponent({
 			font-weight: 500;
 			box-shadow: none;
 			padding: .2em .4em .2em .6em;
+			min-width: 0;
 
 			.selected-items {
 				flex: auto 0 0;
@@ -426,7 +427,8 @@ export default defineComponent({
 				// font-weight: 900;
 			}
 			&>input {
-				flex: auto 1 0;
+				flex: auto 1 1;
+				min-width: 0;
 				color: inherit;
 				outline: none;
 				font-size: 16px;
