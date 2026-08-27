@@ -175,11 +175,6 @@ function validate() {
 		return false;
 	}
 
-	if (consumption.value !== null && consumption.value < 0) {
-		showMsg('warning', 'Показание меньше предыдущего', `Новое показание не может быть меньше ${props.payload?.previousReading} м³.`);
-		return false;
-	}
-
 	return true;
 }
 
