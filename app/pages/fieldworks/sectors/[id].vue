@@ -120,7 +120,10 @@ onMounted(async () => {
 
 
 function openRoute(id: string) {
-	navigateTo(`/fieldworks/routes/${id}`);
+	navigateTo({
+		path: `/fieldworks/routes/${id}`,
+		query: { sector: String(sectorId.value) },
+	});
 }
 
 function toPercent(progress = 0, total = 0) {
