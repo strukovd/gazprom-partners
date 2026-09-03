@@ -80,11 +80,32 @@
 					</header>
 					<BaseTable class="rp-street-table" :columns="subscriberColumns" :rows="street.subscribers" rowKey="account">
 						<template #cell.account="{ row }">
-							<NuxtLink class="rp-account-link" :to="`/profile/${row.account}`">{{ row.account }}</NuxtLink>
+							<div class="rp-account">
+								<NuxtLink class="rp-account-link" :to="{ path: `/fieldworks/subscribers/${row.account}`, query: { route: routeId, sector: sectorId } }">{{ row.account }}</NuxtLink>
+								<span v-if="row.readingSource === 'subscriber'" class="rp-account-badge">Абонент</span>
+							</div>
 						</template>
 						<template #cell.reading="{ row }">
-							<BaseButton v-if="row.reading" class="rp-reading-button" variant="light" prependIcon="mdi-check-circle-outline">{{ row.reading }}</BaseButton>
-							<BaseButton v-else class="rp-reading-button" variant="secondary" prependIcon="mdi-pencil-outline">Ввести</BaseButton>
+							<BaseTextBox
+								v-if="editingReading === row"
+								v-model="readingValue"
+								class="rp-reading-input"
+								type="number"
+								autofocus
+								button="OK"
+								@submit="saveReading(row)"
+							/>
+							<div v-else-if="row.readingSource === 'subscriber'" class="rp-reading-button subscriber">
+								<BaseIcon name="mdi-shield-check-outline" size="1em"/>
+								{{ row.reading }}
+								<span class="rp-reading-note">абон.</span>
+							</div>
+							<BaseButton v-else-if="row.readingSource === 'controller'" class="rp-reading-button controller" variant="light" prependIcon="mdi-check-circle-outline" @click="startReading(row)">
+								{{ row.reading }}
+							</BaseButton>
+							<BaseButton v-else class="rp-reading-button empty" variant="secondary" prependIcon="mdi-pencil-outline" @click="startReading(row)">
+								Ввести
+							</BaseButton>
 						</template>
 						<template #cell.difference="{ row }">
 							<span :class="['rp-difference', { hot: row.difference }]">
@@ -135,6 +156,7 @@ type Route = {
 			sealNumber: string;
 			previousReading: string;
 			reading: string | null;
+			readingSource?: 'controller' | 'subscriber';
 			difference: string | number;
 			name: string;
 			lastPayment: string;
@@ -193,6 +215,8 @@ const subscriberColumns = [
 
 const loading = ref(true);
 const curRoute = ref<Route>({} as Route);
+const editingReading = ref<Route['streets'][number]['subscribers'][number] | null>(null);
+const readingValue = ref<string | number>('');
 
 const statsData = computed(() => [
 	{ title: 'В выборке', value: curRoute.value.progress?.total ?? 0, icon: 'mdi-account-group-outline', color: 'gray' },
@@ -218,6 +242,41 @@ function toPercent(collected = 0, total = 0) {
 	return Math.min(Math.max(Math.round((collected / total) * 100), 0), 100);
 }
 
+function startReading(subscriber: Route['streets'][number]['subscribers'][number]) {
+	editingReading.value = subscriber;
+	readingValue.value = subscriber.reading ?? '';
+}
+
+function saveReading(subscriber: Route['streets'][number]['subscribers'][number]) {
+	const reading = String(readingValue.value).trim();
+	if (!reading) return;
+
+	subscriber.reading = reading;
+	subscriber.readingSource = 'controller';
+	subscriber.difference = String(Number(reading) - Number(subscriber.previousReading));
+	editingReading.value = null;
+	updateRouteStats(curRoute.value);
+}
+
+function updateRouteStats(route: Route) {
+	for (const street of route.streets) {
+		street.progress = street.subscribers.reduce((progress, subscriber) => {
+			progress.total++;
+			if (subscriber.reading !== '' && subscriber.reading !== null && subscriber.reading !== undefined) progress.collected++;
+			return progress;
+		}, { collected: 0, total: 0 });
+		street.gasConsumption = street.subscribers.reduce((sum, subscriber) => sum + (Number(subscriber.difference) || 0), 0);
+	}
+
+	route.progress = route.streets.reduce((progress, street) => {
+		progress.collected += street.progress.collected;
+		progress.total += street.progress.total;
+		return progress;
+	}, { collected: 0, total: 0 });
+	route.subscribersCount = route.streets.reduce((count, street) => count + street.subscribers.length, 0);
+	route.gasConsumption = route.streets.reduce((sum, street) => sum + street.gasConsumption, 0);
+}
+
 async function fetchRoute(): Promise<Route> {
 	const routesStub: Route = {
 		id: `1100802`,
@@ -232,11 +291,11 @@ async function fetchRoute(): Promise<Route> {
 				subscribers: [
 					{ id: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
 					{ id: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
-					{ id: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
+					{ id: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', readingSource: 'subscriber', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
 					{ id: 4, account: '110100487', house: '4', sign: '5', meterNumber: '2504050887', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184338', previousReading: '104', reading: '', difference: '', name: 'САЛИЕВА НАЗГУЛЬ', lastPayment: '14.07.2026', gasDebt: '913,43', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 444 555' },
-					{ id: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
+					{ id: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', readingSource: 'controller', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
 					{ id: 6, account: '110100649', house: '6', sign: '5', meterNumber: '2504052335', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22191337', previousReading: '224', reading: '', difference: '', name: 'Булаева Улбосын Суюмкуловна', lastPayment: '25.02.2026', gasDebt: '23,33', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 666 777' },
-					{ id: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
+					{ id: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', readingSource: 'controller', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
 					{ id: 8, account: '110100891', house: '9', sign: '5', meterNumber: '2504003898', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22184338', previousReading: '186', reading: '', difference: '', name: 'ВУЛГИЗОВ АНВАР', lastPayment: '20.06.2026', gasDebt: '678,82', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 888 999' },
 				]
 			},
@@ -248,11 +307,11 @@ async function fetchRoute(): Promise<Route> {
 				subscribers: [
 					{ id: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
 					{ id: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
-					{ id: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
+					{ id: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', readingSource: 'subscriber', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
 					{ id: 4, account: '110100487', house: '4', sign: '5', meterNumber: '2504050887', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184338', previousReading: '104', reading: '', difference: '', name: 'САЛИЕВА НАЗГУЛЬ', lastPayment: '14.07.2026', gasDebt: '913,43', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 444 555' },
-					{ id: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
+					{ id: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', readingSource: 'controller', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
 					{ id: 6, account: '110100649', house: '6', sign: '5', meterNumber: '2504052335', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22191337', previousReading: '224', reading: '', difference: '', name: 'Булаева Улбосын Суюмкуловна', lastPayment: '25.02.2026', gasDebt: '23,33', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 666 777' },
-					{ id: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
+					{ id: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', readingSource: 'controller', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
 					{ id: 8, account: '110100891', house: '9', sign: '5', meterNumber: '2504003898', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22184338', previousReading: '186', reading: '', difference: '', name: 'ВУЛГИЗОВ АНВАР', lastPayment: '20.06.2026', gasDebt: '678,82', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 888 999' },
 				]
 			},
@@ -275,24 +334,7 @@ async function fetchRoute(): Promise<Route> {
 		// status: `В работе`, // collected - новый, > 1 - в работе, = total - выполнено
 	};
 
-	for (const street of routesStub.streets) {
-		street.progress = street.subscribers.reduce((progress, subscriber) => {
-			progress.total++;
-			if (subscriber.reading !== '' && subscriber.reading !== null && subscriber.reading !== undefined) progress.collected++;
-			return progress;
-		}, { collected: 0, total: 0 });
-		street.gasConsumption = street.subscribers.reduce((sum, subscriber) => sum + (Number(subscriber.difference) || 0), 0);
-	}
-
-	routesStub.progress = routesStub.streets.reduce((progress, street) => {
-		progress.collected += street.progress.collected;
-		progress.total += street.progress.total;
-		return progress;
-	}, { collected: 0, total: 0 });
-
-	routesStub.subscribersCount = routesStub.streets.reduce((acc, street) => acc + street.subscribers.length, 0);
-	// routesStub.subscribersCount = routesStub.progress.total;
-	routesStub.gasConsumption = routesStub.streets.reduce((sum, street) => sum + street.gasConsumption, 0);
+	updateRouteStats(routesStub);
 
 	return new Promise(resolve => setTimeout(() => resolve(routesStub), 1000));
 }
@@ -530,30 +572,97 @@ async function fetchRoute(): Promise<Route> {
 				}
 
 				.base-table-row {
+					&:has(.rp-account-badge) {
+						background: #f7f4ff;
+					}
+
 					&:hover {
 						background: #f8fbff;
+					}
+
+					&:has(.rp-account-badge):hover {
+						background: #f1ecff;
 					}
 				}
 			}
 
-			.rp-account-link {
-				color: #2563eb;
-				font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-				font-size: 1.1em;
-				font-weight: 900;
-				text-decoration: none;
+			.rp-account {
+				display: flex;
+				align-items: center;
+				gap: .45em;
 
-				&:hover {
-					text-decoration: underline;
+				.rp-account-link {
+					color: #2563eb;
+					font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+					font-size: 1.1em;
+					font-weight: 900;
+					text-decoration: none;
+
+					&:hover {
+						text-decoration: underline;
+					}
+				}
+
+				.rp-account-badge {
+					padding: .25em .55em;
+					border: 1px solid #ddd6fe;
+					border-radius: 1em;
+					color: #7c3aed;
+					background: #f5f3ff;
+					font-size: .78em;
+					font-weight: 800;
 				}
 			}
 
 			.rp-reading-button {
+				display: inline-flex;
+				align-items: center;
+				gap: .35em;
 				justify-content: center;
 				width: 100%;
 				min-width: 7em;
 				padding: .45em .65em;
 				font-size: .9em;
+				font-weight: 800;
+
+				&.empty {
+					border-color: #cbd5e1;
+					border-style: dashed;
+					color: #64748b;
+					background: #ffffff;
+				}
+
+				&.controller {
+					color: #2563eb;
+					background: #eff6ff;
+					border-color: #bfdbfe;
+				}
+
+				&.subscriber {
+					border: 1px solid #ddd6fe;
+					border-radius: 7px;
+					color: #7c3aed;
+					background: #f5f3ff;
+				}
+
+				.rp-reading-note {
+					font-size: .78em;
+					font-weight: 700;
+					opacity: .7;
+				}
+			}
+
+			.rp-reading-input {
+				width: 100%;
+				min-width: 7em;
+
+				.text-box-area {
+					padding: 0 .25em;
+
+					.base-button {
+						padding: .35em .55em;
+					}
+				}
 			}
 
 			.rp-difference {

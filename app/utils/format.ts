@@ -46,6 +46,7 @@ export function toISODate(date: Date | string) {
 }
 
 export function toLocaleDate(date: Date | string) {
+	if(!date) return '';
 	if(typeof date === 'string') date = new Date(date);
 	return (date as Date).toLocaleDateString('ru-RU');
 }
