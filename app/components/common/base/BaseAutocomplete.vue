@@ -10,7 +10,7 @@
 					<span class="error-message">{{ error }}</span>
 				</div>
 			</header>
-			<div class="input-container">
+			<div ref="inputContainer" class="input-container">
 				<span class="selected-items" v-if="multiple && selectedItems.length">
 					<span class="item-badge" v-for="selectedItem of selectedItems" :key="selectedItem[fieldKey]">
 						<!-- <BaseIcon class="append-icon" size="1.4em" :name="selectedItem.icon ?? 'mdi-menu-down'"/> -->
@@ -34,7 +34,7 @@
 					@input="onInput"
 					@keydown="onKeydown"
 				>
-				<BaseIcon class="append-icon" size="1.4em" :name="appendIcon ?? 'mdi-menu-down'"/>
+				<BaseIcon class="append-icon" :class="{ open: visibleDropdown }" size="1.4em" :name="appendIcon ?? 'mdi-menu-down'"/>
 				<!-- <template v-else>
 					<BaseIcon name="mdi-menu-down" style="transform: rotate(180deg);"/>
 				</template> -->
@@ -46,22 +46,24 @@
 				<!-- <BaseButton :prepend-icon="'mdi-check'" @click="selectItem(selectedItems[0])">Выбрать</BaseButton> -->
 			</div>
 		</label>
-		<ul v-if="visibleDropdown" class="dropdown">
-			<li
-				:key="index"
-				v-for="(item, index) of filteredItems"
-				class="dropdown-item"
-				:class="{focusedItem: focusedItem === index}"
-				@mousedown="selectItem(item)"
-			>
-				<span>
-					<!-- <v-icon v-if="item.icon" :icon="item.icon" size="1.2em" style="margin-right:.3em; opacity:.8;"></v-icon> -->
-					<span>{{ item[fieldValue] }}</span>
-					<span v-if="showKey" style="opacity:.3; margin-left:.3em">{{ item[fieldKey] }}</span>
-				</span>
-			</li>
-			<li class="dropdown-item"><span v-if="filteredItems?.length === 0">Ничего не найдено</span></li>
-		</ul>
+		<Teleport to="body">
+			<ul v-if="visibleDropdown" class="base-autocomplete-dropdown" :style="dropdownStyle">
+				<li
+					:key="index"
+					v-for="(item, index) of filteredItems"
+					class="dropdown-item"
+					:class="{focusedItem: focusedItem === index}"
+					@mousedown="selectItem(item)"
+				>
+					<span>
+						<!-- <v-icon v-if="item.icon" :icon="item.icon" size="1.2em" style="margin-right:.3em; opacity:.8;"></v-icon> -->
+						<span>{{ item[fieldValue] }}</span>
+						<span v-if="showKey" style="opacity:.3; margin-left:.3em">{{ item[fieldKey] }}</span>
+					</span>
+				</li>
+				<li class="dropdown-item"><span v-if="filteredItems?.length === 0">Ничего не найдено</span></li>
+			</ul>
+		</Teleport>
 	</div>
 </template>
 
@@ -98,6 +100,7 @@ export default defineComponent({
 
 			focusedItem: -1,
 			selectedItems: [] as any[],
+			dropdownStyle: {} as Record<string, string>,
 		};
 	},
 	computed: {
@@ -218,6 +221,20 @@ export default defineComponent({
 		},
 		showDropdown() {
 			this.visibleDropdown = true;
+			this.$nextTick(() => this.updateDropdownPosition());
+		},
+		updateDropdownPosition() {
+			if(!this.visibleDropdown) return;
+
+			const inputContainer = this.$refs.inputContainer as HTMLElement | undefined;
+			if(!inputContainer) return;
+
+			const { bottom, left, width } = inputContainer.getBoundingClientRect();
+			this.dropdownStyle = {
+				top: `${bottom + 4}px`,
+				left: `${left}px`,
+				width: `${width}px`
+			};
 		},
 		hideDropdown() {
 			setTimeout(()=>{ // Задерка setTimeout нужна т.к. при клике (теряется фокус и) список скрывается раньше чем выбирается пункт
@@ -338,7 +355,13 @@ export default defineComponent({
 	created() {
 		this.init();
 	},
+	mounted() {
+		window.addEventListener('resize', this.updateDropdownPosition);
+		window.addEventListener('scroll', this.updateDropdownPosition, true);
+	},
 	unmounted() {
+		window.removeEventListener('resize', this.updateDropdownPosition);
+		window.removeEventListener('scroll', this.updateDropdownPosition, true);
 		this.$emit('update:modelValue', undefined );
 	}
 });
@@ -451,42 +474,13 @@ export default defineComponent({
 			.loader {
 				padding:0 .6em;
 			}
-		}
-	}
 
-	&:has(.dropdown) .append-icon {
-		transform: rotate(180deg);
-	}
-	.dropdown {
-		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.14);
-		margin: .2em 0em;
-		border-radius: 3px;
-		background: #fdfdfd;
-		position:absolute;
-		width:100%;
-		padding:0;
-		max-height: 300px;
-		overflow: visible;
-		z-index: 999999999;
+			.append-icon {
+				transition: transform .2s ease;
 
-		.dropdown-item {
-			line-height: 2em;
-			padding:0 1.6em;
-			cursor:pointer;
-			list-style:none;
-
-			&.focusedItem {
-				box-shadow:inset 0 0 1px 2px cornflowerblue;
-				// outline:1px solid #43a1f3;
-				background:aliceblue;
-
-				position: relative;
-				z-index:100;
-				border-radius:3px;
-			}
-
-			&:hover {
-				background:aliceblue;
+				&.open {
+					transform: rotate(180deg);
+				}
 			}
 		}
 	}
@@ -499,6 +493,39 @@ export default defineComponent({
 
 			// outline:1px dashed red;
 			// color: red;
+		}
+	}
+}
+
+.base-autocomplete-dropdown {
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.14);
+	margin: 0;
+	border-radius: 3px;
+	background: #fdfdfd;
+	position: fixed;
+	padding: 0;
+	max-height: 300px;
+	overflow: auto;
+	z-index: 999999999;
+
+	.dropdown-item {
+		line-height: 2em;
+		padding: 0 1.6em;
+		cursor: pointer;
+		list-style: none;
+
+		&.focusedItem {
+			box-shadow: inset 0 0 1px 2px cornflowerblue;
+			// outline:1px solid #43a1f3;
+			background: aliceblue;
+
+			position: relative;
+			z-index: 100;
+			border-radius: 3px;
+		}
+
+		&:hover {
+			background: aliceblue;
 		}
 	}
 }
