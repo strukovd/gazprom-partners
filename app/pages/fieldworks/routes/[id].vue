@@ -124,7 +124,26 @@ type Route = {
 	streets: {
 		street: string;
 		total: number;
-		subscribers: { reading: string | null; difference: string | number }[];
+		subscribers: {
+			id: number;
+			account: string;
+			house: string;
+			sign: string;
+			meterNumber: string;
+			power: string;
+			model: string;
+			sealNumber: string;
+			previousReading: string;
+			reading: string | null;
+			difference: string | number;
+			name: string;
+			lastPayment: string;
+			gasDebt: string;
+			gasDebtClass: string;
+			penaltyDebt: string;
+			phone: string;
+
+		}[];
 		progress: { collected: number; total: number };
 		gasConsumption: number;
 	}[];
@@ -154,7 +173,7 @@ const search = ref('');
 const model = ref('all');
 
 const subscriberColumns = [
-	{ key: 'number', label: '№', width: '3em' },
+	{ key: 'id', label: '№', width: '3em' },
 	{ key: 'account', label: 'Лицевой счёт', width: '9em' },
 	{ key: 'house', label: 'Дом', width: '4em' },
 	{ key: 'sign', label: 'Зн.', width: '3em' },
@@ -211,14 +230,14 @@ async function fetchRoute(): Promise<Route> {
 				progress: { collected: 0, total: 0 },
 				gasConsumption: 0,
 				subscribers: [
-					{ number: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
-					{ number: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
-					{ number: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
-					{ number: 4, account: '110100487', house: '4', sign: '5', meterNumber: '2504050887', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184338', previousReading: '104', reading: '', difference: '', name: 'САЛИЕВА НАЗГУЛЬ', lastPayment: '14.07.2026', gasDebt: '913,43', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 444 555' },
-					{ number: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
-					{ number: 6, account: '110100649', house: '6', sign: '5', meterNumber: '2504052335', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22191337', previousReading: '224', reading: '', difference: '', name: 'Булаева Улбосын Суюмкуловна', lastPayment: '25.02.2026', gasDebt: '23,33', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 666 777' },
-					{ number: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
-					{ number: 8, account: '110100891', house: '9', sign: '5', meterNumber: '2504003898', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22184338', previousReading: '186', reading: '', difference: '', name: 'ВУЛГИЗОВ АНВАР', lastPayment: '20.06.2026', gasDebt: '678,82', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 888 999' },
+					{ id: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
+					{ id: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
+					{ id: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
+					{ id: 4, account: '110100487', house: '4', sign: '5', meterNumber: '2504050887', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184338', previousReading: '104', reading: '', difference: '', name: 'САЛИЕВА НАЗГУЛЬ', lastPayment: '14.07.2026', gasDebt: '913,43', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 444 555' },
+					{ id: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
+					{ id: 6, account: '110100649', house: '6', sign: '5', meterNumber: '2504052335', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22191337', previousReading: '224', reading: '', difference: '', name: 'Булаева Улбосын Суюмкуловна', lastPayment: '25.02.2026', gasDebt: '23,33', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 666 777' },
+					{ id: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
+					{ id: 8, account: '110100891', house: '9', sign: '5', meterNumber: '2504003898', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22184338', previousReading: '186', reading: '', difference: '', name: 'ВУЛГИЗОВ АНВАР', lastPayment: '20.06.2026', gasDebt: '678,82', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 888 999' },
 				]
 			},
 			{
@@ -227,14 +246,14 @@ async function fetchRoute(): Promise<Route> {
 				progress: { collected: 0, total: 0 },
 				gasConsumption: 0,
 				subscribers: [
-					{ number: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
-					{ number: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
-					{ number: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
-					{ number: 4, account: '110100487', house: '4', sign: '5', meterNumber: '2504050887', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184338', previousReading: '104', reading: '', difference: '', name: 'САЛИЕВА НАЗГУЛЬ', lastPayment: '14.07.2026', gasDebt: '913,43', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 444 555' },
-					{ number: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
-					{ number: 6, account: '110100649', house: '6', sign: '5', meterNumber: '2504052335', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22191337', previousReading: '224', reading: '', difference: '', name: 'Булаева Улбосын Суюмкуловна', lastPayment: '25.02.2026', gasDebt: '23,33', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 666 777' },
-					{ number: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
-					{ number: 8, account: '110100891', house: '9', sign: '5', meterNumber: '2504003898', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22184338', previousReading: '186', reading: '', difference: '', name: 'ВУЛГИЗОВ АНВАР', lastPayment: '20.06.2026', gasDebt: '678,82', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 888 999' },
+					{ id: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
+					{ id: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
+					{ id: 3, account: '110100304', house: '3', sign: '5', meterNumber: '2504050918', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184334', previousReading: '17', reading: '45', difference: '28', name: 'Сакихова Зульфия Турсуновна', lastPayment: '24.06.2026', gasDebt: '-26,20', gasDebtClass: 'positive', penaltyDebt: '—', phone: '+996 700 333 444' },
+					{ id: 4, account: '110100487', house: '4', sign: '5', meterNumber: '2504050887', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184338', previousReading: '104', reading: '', difference: '', name: 'САЛИЕВА НАЗГУЛЬ', lastPayment: '14.07.2026', gasDebt: '913,43', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 444 555' },
+					{ id: 5, account: '110100568', house: '5', sign: '5', meterNumber: '2504050245', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184335', previousReading: '1', reading: '12', difference: '11', name: 'МАВАНКУЙ Р И', lastPayment: '—', gasDebt: '—', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 555 666' },
+					{ id: 6, account: '110100649', house: '6', sign: '5', meterNumber: '2504052335', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22191337', previousReading: '224', reading: '', difference: '', name: 'Булаева Улбосын Суюмкуловна', lastPayment: '25.02.2026', gasDebt: '23,33', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 666 777' },
+					{ id: 7, account: '110100720', house: '7', sign: '5', meterNumber: '2503003668', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22751020', previousReading: '224', reading: '251', difference: '27', name: 'НОРБУЗАЕВ ТИЛЕК', lastPayment: '30.05.2026', gasDebt: '1 824,36', gasDebtClass: 'overdue', penaltyDebt: '—', phone: '+996 700 777 888' },
+					{ id: 8, account: '110100891', house: '9', sign: '5', meterNumber: '2504003898', power: 'G4', model: 'ВК-G4 Elster', sealNumber: '22184338', previousReading: '186', reading: '', difference: '', name: 'ВУЛГИЗОВ АНВАР', lastPayment: '20.06.2026', gasDebt: '678,82', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 888 999' },
 				]
 			},
 			{
