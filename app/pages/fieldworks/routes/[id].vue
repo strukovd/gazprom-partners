@@ -33,27 +33,15 @@
 				<div class="rp-spacer"></div>
 				<div class="rp-summary-item">
 					<div class="rp-summary-label">Прогресс</div>
-					<div class="rp-summary-value">10/21 (48%)</div>
-					<BaseProgressBar class="rp-progress-line" :percent="48" height=".55em" color="#2563eb"/>
+					<div class="rp-summary-value">{{ curRoute.progress?.collected ?? 0 }}/{{ curRoute.progress?.total ?? 0 }} ({{ toPercent(curRoute.progress?.collected, curRoute.progress?.total) }}%)</div>
+					<BaseProgressBar class="rp-progress-line" :percent="toPercent(curRoute.progress?.collected, curRoute.progress?.total)" height=".55em" color="#2563eb"/>
 				</div>
 			</BaseIsland>
 
 			<section class="rp-stats">
-				<BaseIsland class="rp-stat">
-					<div class="rp-stat-icon gray"><BaseIcon name="mdi-account-group-outline" size="1.4em"/></div>
-					<div class="rp-stat-info"><div class="rp-stat-value">21</div><div class="rp-stat-title">В выборке</div></div>
-				</BaseIsland>
-				<BaseIsland class="rp-stat">
-					<div class="rp-stat-icon green"><BaseIcon name="mdi-check-circle-outline" size="1.4em"/></div>
-					<div class="rp-stat-info"><div class="rp-stat-value">10</div><div class="rp-stat-title">Собрано</div></div>
-				</BaseIsland>
-				<BaseIsland class="rp-stat">
-					<div class="rp-stat-icon blue"><BaseIcon name="mdi-fire" size="1.4em"/></div>
-					<div class="rp-stat-info"><div class="rp-stat-value">212 м<span class="rp-stat-unit">3</span></div><div class="rp-stat-title">Расход газа</div></div>
-				</BaseIsland>
-				<BaseIsland class="rp-stat">
-					<div class="rp-stat-icon orange"><BaseIcon name="mdi-clock-outline" size="1.4em"/></div>
-					<div class="rp-stat-info"><div class="rp-stat-value">11</div><div class="rp-stat-title">Не собрано</div></div>
+				<BaseIsland v-for="item of statsData" :key="item.title" class="rp-stat">
+					<div :class="['rp-stat-icon', item.color]"><BaseIcon :name="item.icon" size="1.4em"/></div>
+					<div class="rp-stat-info"><div class="rp-stat-value">{{ item.value }}<template v-if="item.unit"> {{ item.unit }}<span v-if="item.exponent" class="rp-stat-unit">{{ item.exponent }}</span></template></div><div class="rp-stat-title">{{ item.title }}</div></div>
 				</BaseIsland>
 			</section>
 
@@ -82,12 +70,12 @@
 			<template v-for="street of curRoute.streets" :key="street.street">
 				<BaseIsland class="rp-street">
 					<header class="rp-street-header">
-						<div class="rp-street-title"><BaseIcon name="mdi-map-marker-outline" size="1.2em"/>ул. ВИШНЕВАЯ</div>
-						<div class="rp-street-count">8 в выборке, всего: 62</div>
+						<div class="rp-street-title"><BaseIcon name="mdi-map-marker-outline" size="1.2em"/>{{ street.street }}</div>
+						<div class="rp-street-count">{{ street.progress.total }} в выборке, всего: {{ street.total }}</div>
 						<div class="rp-street-stats">
-							<span class="rp-street-stat green"><BaseIcon name="mdi-check-circle-outline" size="1em"/>3</span>
-							<span class="rp-street-stat blue"><BaseIcon name="mdi-fire" size="1em"/>66 м³</span>
-							<span class="rp-street-stat orange"><BaseIcon name="mdi-clock-outline" size="1em"/>5</span>
+							<span class="rp-street-stat green"><BaseIcon name="mdi-check-circle-outline" size="1em"/>{{ street.progress.collected }}</span>
+							<span class="rp-street-stat blue"><BaseIcon name="mdi-fire" size="1em"/>{{ street.gasConsumption }} м³</span>
+							<span class="rp-street-stat orange"><BaseIcon name="mdi-clock-outline" size="1em"/>{{ street.progress.total - street.progress.collected }}</span>
 						</div>
 					</header>
 					<BaseTable class="rp-street-table" :columns="subscriberColumns" :rows="street.subscribers" rowKey="account">
@@ -132,7 +120,14 @@ type Route = {
 	assignees: { id: number; name: string }[];
 	date: Date | string;
 	subscribersCount?: number;
-	streets: { street: string; subscribers: any[] }[];
+	gasConsumption?: number;
+	streets: {
+		street: string;
+		total: number;
+		subscribers: { reading: string | null; difference: string | number }[];
+		progress: { collected: number; total: number };
+		gasConsumption: number;
+	}[];
 	progress: { collected: number; total: number };
 
 	// district: string;
@@ -180,11 +175,29 @@ const subscriberColumns = [
 const loading = ref(true);
 const curRoute = ref<Route>({} as Route);
 
+const statsData = computed(() => [
+	{ title: 'В выборке', value: curRoute.value.progress?.total ?? 0, icon: 'mdi-account-group-outline', color: 'gray' },
+	{ title: 'Собрано', value: curRoute.value.progress?.collected ?? 0, icon: 'mdi-check-circle-outline', color: 'green' },
+	{ title: 'Расход газа', value: curRoute.value.gasConsumption ?? 0, unit: 'м', exponent: '3', icon: 'mdi-fire', color: 'blue' },
+	{ title: 'Не собрано', value: (curRoute.value.progress?.total ?? 0) - (curRoute.value.progress?.collected ?? 0), icon: 'mdi-clock-outline', color: 'orange' },
+]);
+
+const readingFilters = computed(() => [
+	{ key: 'all', value: 'Все', badge: curRoute.value.progress?.total ?? 0 },
+	{ key: 'collected', value: 'Собрано', badge: curRoute.value.progress?.collected ?? 0 },
+	{ key: 'missing', value: 'Не собрано', badge: (curRoute.value.progress?.total ?? 0) - (curRoute.value.progress?.collected ?? 0) },
+]);
+
 onMounted(async () => {
 	loading.value = true;
 	curRoute.value = await fetchRoute();
 	loading.value = false;
 });
+
+function toPercent(collected = 0, total = 0) {
+	if (!total) return 0;
+	return Math.min(Math.max(Math.round((collected / total) * 100), 0), 100);
+}
 
 async function fetchRoute(): Promise<Route> {
 	const routesStub: Route = {
@@ -194,6 +207,9 @@ async function fetchRoute(): Promise<Route> {
 		streets: [
 			{
 				street: `ул. ВИШНЕВАЯ`,
+				total: 62,
+				progress: { collected: 0, total: 0 },
+				gasConsumption: 0,
 				subscribers: [
 					{ number: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
 					{ number: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
@@ -207,6 +223,9 @@ async function fetchRoute(): Promise<Route> {
 			},
 			{
 				street: `ул. ТОКТОГУЛА`,
+				total: 58,
+				progress: { collected: 0, total: 0 },
+				gasConsumption: 0,
 				subscribers: [
 					{ number: 1, account: '110100134', house: '1', sign: '5', meterNumber: '2504046729', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22780598', previousReading: '417', reading: '', difference: '', name: 'МУСАБЕКОВ АЛМАЗ', lastPayment: '25.06.2026', gasDebt: '175,99', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 111 222' },
 					{ number: 2, account: '110100215', house: '2', sign: '5', meterNumber: '2504052336', power: 'G1.6', model: 'Чунчин G1.6', sealNumber: '22184311', previousReading: '10', reading: '', difference: '', name: 'ЛАНСАРОВ БЕРИК', lastPayment: '18.06.2026', gasDebt: '30,71', gasDebtClass: '', penaltyDebt: '—', phone: '+996 700 222 333' },
@@ -220,19 +239,41 @@ async function fetchRoute(): Promise<Route> {
 			},
 			{
 				street: `мкр. КУЗНЕЦОВСКИй`,
+				total: 52,
+				progress: { collected: 0, total: 0 },
+				gasConsumption: 0,
 				subscribers: []
 			},
 			{
 				street: `ул. КОРОЛЕВА`,
+				total: 45,
+				progress: { collected: 0, total: 0 },
+				gasConsumption: 0,
 				subscribers: []
 			}
 		],
-		progress: { collected: 10, total: 21 },
+		progress: { collected: 0, total: 0 },
 		// status: `В работе`, // collected - новый, > 1 - в работе, = total - выполнено
 	};
 
-	// количество абонентов всех улиц в маршруте
+	for (const street of routesStub.streets) {
+		street.progress = street.subscribers.reduce((progress, subscriber) => {
+			progress.total++;
+			if (subscriber.reading !== '' && subscriber.reading !== null && subscriber.reading !== undefined) progress.collected++;
+			return progress;
+		}, { collected: 0, total: 0 });
+		street.gasConsumption = street.subscribers.reduce((sum, subscriber) => sum + (Number(subscriber.difference) || 0), 0);
+	}
+
+	routesStub.progress = routesStub.streets.reduce((progress, street) => {
+		progress.collected += street.progress.collected;
+		progress.total += street.progress.total;
+		return progress;
+	}, { collected: 0, total: 0 });
+
 	routesStub.subscribersCount = routesStub.streets.reduce((acc, street) => acc + street.subscribers.length, 0);
+	// routesStub.subscribersCount = routesStub.progress.total;
+	routesStub.gasConsumption = routesStub.streets.reduce((sum, street) => sum + street.gasConsumption, 0);
 
 	return new Promise(resolve => setTimeout(() => resolve(routesStub), 1000));
 }
